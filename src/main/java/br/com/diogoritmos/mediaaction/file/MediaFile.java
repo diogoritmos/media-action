@@ -1,4 +1,4 @@
-package br.com.diogoritmos.mediaaction;
+package br.com.diogoritmos.mediaaction.file;
 
 public class MediaFile {
     private String path;

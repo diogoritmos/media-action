@@ -1,11 +1,11 @@
 package br.com.diogoritmos.mediaaction.transcript;
 
-public class SubtitleBlock {
+public class TranscriptBlock {
     private String text;
     private long startTime;
     private long endTime;
 
-    public SubtitleBlock(String text, long startTime, long endTime) {
+    public TranscriptBlock(String text, long startTime, long endTime) {
         this.text = text;
         this.startTime = startTime;
         this.endTime = endTime;

@@ -1,21 +1,18 @@
-package br.com.diogoritmos;
+package br.com.diogoritmos.mediaaction.file;
 
-import br.com.diogoritmos.mediaaction.MediaFile;
-import br.com.diogoritmos.mediaaction.MediaTranscript;
-import br.com.diogoritmos.mediaaction.transcript.SubtitleBlock;
 import org.apache.tika.Tika;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 
-class MediaAction {
+public class LoadLocalMediaFileImpl implements LoadMediaFile {
     private static final List<String> SUPPORTED_MIMETYPES = List.of("video/mp4");
     private static final Tika tika = new Tika();
 
-    public MediaFile loadMedia(String path) throws FileNotFoundException {
+    @Override
+    public MediaFile loadFile(String path) throws FileNotFoundException {
         var beforeMemory = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
         System.out.println("Before memory: " + beforeMemory);
 
@@ -40,29 +37,13 @@ class MediaAction {
             }
 
             return new MediaFile(
-                resourcePath,
-                content.length,
-                mimeType
+                    resourcePath,
+                    content.length,
+                    mimeType
             );
         } catch (IOException e) {
             System.out.println("Error loading media file because of: " + e.getMessage());
             throw new RuntimeException("Error loading media file");
-        }
-    }
-
-    public MediaTranscript generateTranscript(MediaFile file) {
-        return new MediaTranscript(
-            Arrays.asList(
-                new SubtitleBlock("Hello, world!", 0, 1000),
-                new SubtitleBlock("This is a test", 1000, 2000)
-            ),
-            "en"
-        );
-    }
-
-    public void offloadContent(MediaTranscript transcript) {
-        for (SubtitleBlock block : transcript.getSubtitleBlocks()) {
-            System.out.println(block.getText());
         }
     }
 }

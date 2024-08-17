@@ -35,6 +35,6 @@ tasks.test {
 }
 
 tasks.withType<JavaExec> {
-    environment("SPEECH_KEY", System.getenv("SPEECH_KEY"))
-    environment("SPEECH_REGION", System.getenv("SPEECH_REGION"))
+    environment("SPEECH_KEY", env.SPEECH_KEY.value)
+    environment("SPEECH_REGION", env.SPEECH_REGION.value)
 }

@@ -3,8 +3,8 @@ package br.com.diogoritmos.mediaaction.transcript;
 import java.util.List;
 
 public class MediaTranscript {
-    private List<TranscriptBlock> transcriptBlocks;
-    private String language;
+    private final List<TranscriptBlock> transcriptBlocks;
+    private final String language;
 
     public MediaTranscript(List<TranscriptBlock> transcriptBlocks, String language) {
         this.transcriptBlocks = transcriptBlocks;

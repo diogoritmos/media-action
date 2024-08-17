@@ -1,9 +1,9 @@
 package br.com.diogoritmos.mediaaction.file;
 
 public class MediaFile {
-    private String path;
-    private long size;
-    private String mimeType;
+    private final String path;
+    private final long size;
+    private final String mimeType;
 
     public MediaFile(String path, long size, String mimeType) {
         this.path = path;

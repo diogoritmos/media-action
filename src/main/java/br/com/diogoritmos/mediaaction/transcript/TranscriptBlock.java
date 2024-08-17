@@ -3,9 +3,9 @@ package br.com.diogoritmos.mediaaction.transcript;
 import java.math.BigInteger;
 
 public class TranscriptBlock {
-    private String text;
-    private BigInteger startTime;
-    private BigInteger endTime;
+    private final String text;
+    private final BigInteger startTime;
+    private final BigInteger endTime;
 
     public TranscriptBlock(String text, BigInteger startTime, BigInteger endTime) {
         this.text = text;

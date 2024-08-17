@@ -33,11 +33,9 @@ public class LoadAzureMediaTranscriptImpl implements LoadMediaTranscript {
 
         if (result.getReason() == ResultReason.RecognizedSpeech) {
             System.out.println("RECOGNIZED: Text=" + result.getText());
-        }
-        else if (result.getReason() == ResultReason.NoMatch) {
+        } else if (result.getReason() == ResultReason.NoMatch) {
             System.out.println("NOMATCH: Speech could not be recognized.");
-        }
-        else if (result.getReason() == ResultReason.Canceled) {
+        } else if (result.getReason() == ResultReason.Canceled) {
             CancellationDetails cancellation = CancellationDetails.fromResult(result);
             System.out.println("CANCELED: Reason=" + cancellation.getReason());
 
@@ -50,10 +48,10 @@ public class LoadAzureMediaTranscriptImpl implements LoadMediaTranscript {
 
         return new MediaTranscript(
                 List.of(
-                    new TranscriptBlock(
-                        result.getText(),
-                        BigInteger.ZERO,
-                        result.getDuration()
-                )), language);
+                        new TranscriptBlock(
+                                result.getText(),
+                                BigInteger.ZERO,
+                                result.getDuration()
+                        )), language);
     }
 }

@@ -4,13 +4,14 @@ import br.com.diogoritmos.mediaaction.file.MediaFile;
 import com.microsoft.cognitiveservices.speech.*;
 import com.microsoft.cognitiveservices.speech.audio.AudioConfig;
 
-import java.math.BigInteger;
-import java.util.List;
+import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
 
 public class LoadAzureMediaTranscriptImpl implements LoadMediaTranscript {
     private static final String SPEECH_KEY = System.getenv("SPEECH_KEY");
     private static final String SPEECH_REGION = System.getenv("SPEECH_REGION");
+
+    private boolean isRunning = true;
 
     @Override
     public MediaTranscript loadTranscript(MediaFile file, String language) {
@@ -19,39 +20,58 @@ public class LoadAzureMediaTranscriptImpl implements LoadMediaTranscript {
 
         final AudioConfig audioConfig = AudioConfig.fromWavFileInput(file.getPath());
 
-        final var speechRecognizer = new SpeechRecognizer(speechConfig, audioConfig);
-        final var task = speechRecognizer.recognizeOnceAsync();
-        final SpeechRecognitionResult result;
+        final var recognizer = new SpeechRecognizer(speechConfig, audioConfig);
+        final var transcriptBlocks = new ArrayList<TranscriptBlock>();
 
+        // Set up the event handlers
+        recognizer.sessionStarted.addEventListener((s, e) -> {
+            System.out.println("Started to recognize media file.");
+            this.isRunning = true;
+        });
+
+        recognizer.recognized.addEventListener((s, e) -> {
+            if (e.getResult().getReason() == ResultReason.RecognizedSpeech) {
+                System.out.println("Recognized: " + e.getResult().getText());
+                transcriptBlocks.add(new TranscriptBlock(e.getResult().getText()));
+            } else if (e.getResult().getReason() == ResultReason.NoMatch) {
+                System.out.println("No speech could be recognized.");
+            }
+        });
+
+        recognizer.canceled.addEventListener((s, e) -> {
+            System.out.println("Recognition canceled: " + e.getReason());
+            this.isRunning = false;
+
+            if (e.getReason() == CancellationReason.Error) {
+                System.out.println("Error details: " + e.getErrorDetails());
+            }
+        });
+
+        recognizer.sessionStopped.addEventListener((s, e) -> {
+            System.out.println("Session stopped.");
+            this.isRunning = false;
+        });
+
+        // Start continuous recognition
+        final var startTime = System.currentTimeMillis();
         try {
-            result = task.get();
+            recognizer.startContinuousRecognitionAsync().get();
         } catch (InterruptedException | ExecutionException e) {
-            System.out.println("Error recognizing speech: " + e.getMessage());
-
             throw new RuntimeException(e);
         }
 
-        if (result.getReason() == ResultReason.RecognizedSpeech) {
-            System.out.println("RECOGNIZED: Text=" + result.getText());
-        } else if (result.getReason() == ResultReason.NoMatch) {
-            System.out.println("NOMATCH: Speech could not be recognized.");
-        } else if (result.getReason() == ResultReason.Canceled) {
-            CancellationDetails cancellation = CancellationDetails.fromResult(result);
-            System.out.println("CANCELED: Reason=" + cancellation.getReason());
+        // @TO-DO: timeout if it takes too long
+        while (this.isRunning) {}
 
-            if (cancellation.getReason() == CancellationReason.Error) {
-                System.out.println("CANCELED: ErrorCode=" + cancellation.getErrorCode());
-                System.out.println("CANCELED: ErrorDetails=" + cancellation.getErrorDetails());
-                System.out.println("CANCELED: Did you set the speech resource key and region values?");
-            }
+        // Stop continuous recognition
+        try {
+            recognizer.stopContinuousRecognitionAsync().get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e);
         }
+        final var endTime = System.currentTimeMillis();
+        System.out.println("Transcription finished in " + (endTime - startTime) + " milliseconds.");
 
-        return new MediaTranscript(
-                List.of(
-                        new TranscriptBlock(
-                                result.getText(),
-                                BigInteger.ZERO,
-                                result.getDuration()
-                        )), language);
+        return new MediaTranscript(transcriptBlocks, language);
     }
 }

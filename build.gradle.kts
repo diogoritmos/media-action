@@ -13,6 +13,7 @@ repositories {
 
 dependencies {
     implementation("org.apache.tika:tika-core:2.4.0")
+    implementation("com.azure:azure-ai-textanalytics:5.3.0")
 
     // Requires explicit configuration
     implementation(mapOf(
@@ -37,4 +38,6 @@ tasks.test {
 tasks.withType<JavaExec> {
     environment("SPEECH_KEY", env.SPEECH_KEY.value)
     environment("SPEECH_REGION", env.SPEECH_REGION.value)
+    environment("LANGUAGE_KEY", env.LANGUAGE_KEY.value)
+    environment("LANGUAGE_ENDPOINT", env.LANGUAGE_ENDPOINT.value)
 }

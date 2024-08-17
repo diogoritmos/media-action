@@ -5,13 +5,12 @@ import com.microsoft.cognitiveservices.speech.*;
 import com.microsoft.cognitiveservices.speech.audio.AudioConfig;
 
 import java.util.ArrayList;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 
 public class LoadAzureMediaTranscriptImpl implements LoadMediaTranscript {
     private static final String SPEECH_KEY = System.getenv("SPEECH_KEY");
     private static final String SPEECH_REGION = System.getenv("SPEECH_REGION");
-
-    private boolean isRunning = true;
 
     @Override
     public MediaTranscript loadTranscript(MediaFile file, String language) {
@@ -22,11 +21,11 @@ public class LoadAzureMediaTranscriptImpl implements LoadMediaTranscript {
 
         final var recognizer = new SpeechRecognizer(speechConfig, audioConfig);
         final var transcriptBlocks = new ArrayList<TranscriptBlock>();
+        final var latch = new CountDownLatch(1);
 
         // Set up the event handlers
         recognizer.sessionStarted.addEventListener((s, e) -> {
             System.out.println("Started to recognize media file.");
-            this.isRunning = true;
         });
 
         recognizer.recognized.addEventListener((s, e) -> {
@@ -40,7 +39,7 @@ public class LoadAzureMediaTranscriptImpl implements LoadMediaTranscript {
 
         recognizer.canceled.addEventListener((s, e) -> {
             System.out.println("Recognition canceled: " + e.getReason());
-            this.isRunning = false;
+            latch.countDown();
 
             if (e.getReason() == CancellationReason.Error) {
                 System.out.println("Error details: " + e.getErrorDetails());
@@ -49,7 +48,7 @@ public class LoadAzureMediaTranscriptImpl implements LoadMediaTranscript {
 
         recognizer.sessionStopped.addEventListener((s, e) -> {
             System.out.println("Session stopped.");
-            this.isRunning = false;
+            latch.countDown();
         });
 
         // Start continuous recognition
@@ -61,7 +60,13 @@ public class LoadAzureMediaTranscriptImpl implements LoadMediaTranscript {
         }
 
         // @TO-DO: timeout if it takes too long
-        while (this.isRunning) {}
+        // Wait for the recognition to complete
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            System.out.println("Interrupted while waiting for recognition to complete.");
+            throw new RuntimeException(e);
+        }
 
         // Stop continuous recognition
         try {
